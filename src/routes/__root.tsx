@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { SiteHeader } from "@/components/SiteHeader";
 
 function NotFoundComponent() {
   return (
@@ -72,11 +73,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "BundesligaLive – Spielplan, Ergebnisse & Tabellen" },
+      { name: "description", content: "Spielpläne, Ergebnisse und Tabellen der 1., 2. und 3. Bundesliga – mobil optimiert für alle Fußballfans." },
+      { name: "author", content: "BundesligaLive" },
+      { property: "og:title", content: "BundesligaLive" },
+      { property: "og:description", content: "Alle Spiele, Ergebnisse und Tabellen der deutschen Profi-Ligen." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -113,7 +114,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <Outlet />
+        <footer className="mt-12 border-t border-border py-6 text-center text-xs text-muted-foreground">
+          BundesligaLive · Daten als Beispiel · API-Anbindung geplant
+        </footer>
+      </div>
     </QueryClientProvider>
   );
 }
