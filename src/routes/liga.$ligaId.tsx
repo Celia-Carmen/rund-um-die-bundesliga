@@ -175,7 +175,7 @@ function LigaPage() {
         {tab === "teams" && (
           <>
             <h2 className="mb-3 font-display text-xl font-bold text-foreground">Mannschaft & Spielplan</h2>
-            <TeamPicker leagueId={ligaId} />
+            <TeamPicker teams={teams} upcoming={upcoming} />
           </>
         )}
       </section>
