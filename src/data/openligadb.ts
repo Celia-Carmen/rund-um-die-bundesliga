@@ -1,120 +1,111 @@
-// OpenLigaDB API Client
-// Docs: https://www.openligadb.de/
+import type { LeagueId, Team, Match, StandingRow } from "./leagues";
 
-const BASE_URL = "https://api.openligadb.de";
+const BASE = "https://api.openligadb.de";
 
-export type OpenLigaTeam = {
-  teamId: number;
-  teamName: string;
-  shortName?: string;
-  teamIconUrl?: string;
-};
+export const CURRENT_SEASON = "2025";
 
-export type OpenLigaMatchResult = {
-  resultID: number;
-  pointsTeam1: number;
-  pointsTeam2: number;
-  resultName: string;
-  resultOrderID: number;
-  resultTypeID: number;
-  resultDescription?: string;
-};
+export const OL_SEASONS = ["2025", "2024", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
 
-export type OpenLigaMatch = {
-  matchID: number;
-  matchDateTime: string;
-  timeZoneID: string;
-  leagueId: number;
-  leagueName: string;
-  leagueSeason: number;
-  leagueShortcut: string;
-  matchDateTimeUTC: string;
-  group: {
-    groupName: string;
-    groupOrderID: number;
-    groupID: number;
-  };
-  team1: OpenLigaTeam;
-  team2: OpenLigaTeam;
-  lastUpdateDateTime: string;
-  matchIsFinished: boolean;
-  matchResults: OpenLigaMatchResult[];
-  location?: {
-    locationCity?: string;
-    locationStadium?: string;
-  } | null;
-  numberOfViewers?: number | null;
-};
-
-export type OpenLigaStandingRow = {
-  teamInfoId: number;
-  teamName: string;
-  shortName?: string;
-  teamIconUrl?: string;
-  points: number;
-  opponentGoals: number;
-  goals: number;
-  matches: number;
-  won: number;
-  lost: number;
-  draw: number;
-  goalDiff: number;
-};
-
-// League shortcuts used by OpenLigaDB
-export const LEAGUE_SHORTCUTS = {
-  bl1: "bl1", // 1. Bundesliga
-  bl2: "bl2", // 2. Bundesliga
-  bl3: "bl3", // 3. Liga
-} as const;
-
-export type LeagueShortcut = (typeof LEAGUE_SHORTCUTS)[keyof typeof LEAGUE_SHORTCUTS];
-
-async function fetchJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`);
-  if (!res.ok) {
-    throw new Error(`OpenLigaDB request failed: ${res.status} ${res.statusText}`);
-  }
-  return (await res.json()) as T;
+export function seasonLabel(year: string): string {
+  const y = parseInt(year, 10);
+  return `${y}/${String(y + 1).slice(2)}`;
 }
 
-/** All matches for a league + season (e.g. "bl1", 2024). */
-export function getMatchdata(league: LeagueShortcut, season: number) {
-  return fetchJson<OpenLigaMatch[]>(`/getmatchdata/${league}/${season}`);
+interface OLTeam {
+  TeamId: number;
+  TeamName: string;
+  ShortName: string;
 }
 
-/** All matches for a specific matchday. */
-export function getMatchdataByGroup(
-  league: LeagueShortcut,
-  season: number,
-  groupOrderId: number,
-) {
-  return fetchJson<OpenLigaMatch[]>(
-    `/getmatchdata/${league}/${season}/${groupOrderId}`,
-  );
+interface OLTableRow {
+  Goals: number;
+  OpponentGoals: number;
+  Points: number;
+  Matches: number;
+  Won: number;
+  Lost: number;
+  Draw: number;
+  TeamInfoId: number;
+  ShortName: string;
+  TeamName: string;
 }
 
-/** Current matchday's matches. */
-export function getCurrentMatchday(league: LeagueShortcut) {
-  return fetchJson<OpenLigaMatch[]>(`/getmatchdata/${league}`);
+interface OLResult {
+  PointsTeam1: number;
+  PointsTeam2: number;
+  ResultOrderID: number;
+  ResultTypeID: number;
 }
 
-/** Standings table for a league + season. */
-export function getStandings(league: LeagueShortcut, season: number) {
-  return fetchJson<OpenLigaStandingRow[]>(`/getbltable/${league}/${season}`);
+interface OLMatch {
+  MatchID: number;
+  MatchDateTimeUTC: string;
+  Group: { GroupOrderID: number };
+  Team1: OLTeam;
+  Team2: OLTeam;
+  MatchIsFinished: boolean;
+  MatchResults: OLResult[];
 }
 
-/** All teams competing in a league + season. */
-export function getAvailableTeams(league: LeagueShortcut, season: number) {
-  return fetchJson<OpenLigaTeam[]>(`/getavailableteams/${league}/${season}`);
+export async function fetchTeams(leagueId: LeagueId, season: string): Promise<Team[]> {
+  const res = await fetch(`${BASE}/getavailableteams/${leagueId}/${season}`);
+  if (!res.ok) return [];
+  const data: OLTeam[] = await res.json();
+  return data.map((t) => ({
+    id: String(t.TeamId),
+    name: t.TeamName,
+    shortName: t.ShortName || t.TeamName,
+    leagueId,
+  }));
 }
 
-/** Next match for a given league. */
-export function getNextMatch(league: LeagueShortcut) {
-  return fetchJson<OpenLigaMatch>(`/getnextmatch/${league}`);
+export async function fetchMatches(
+  leagueId: LeagueId,
+  season: string,
+): Promise<{ upcoming: Match[]; results: Match[] }> {
+  const res = await fetch(`${BASE}/getmatchdata/${leagueId}/${season}`);
+  if (!res.ok) return { upcoming: [], results: [] };
+  const data: OLMatch[] = await res.json();
+
+  const matches: Match[] = data.map((m) => {
+    const finalResult =
+      m.MatchResults?.find((r) => r.ResultTypeID === 2) ??
+      m.MatchResults?.sort((a, b) => b.ResultOrderID - a.ResultOrderID)[0];
+    return {
+      id: String(m.MatchID),
+      leagueId,
+      matchday: m.Group.GroupOrderID,
+      homeTeamId: String(m.Team1.TeamId),
+      awayTeamId: String(m.Team2.TeamId),
+      date: m.MatchDateTimeUTC,
+      status: m.MatchIsFinished ? "finished" : "scheduled",
+      homeScore: finalResult?.PointsTeam1,
+      awayScore: finalResult?.PointsTeam2,
+    };
+  });
+
+  const upcoming = matches
+    .filter((m) => m.status === "scheduled")
+    .sort((a, b) => +new Date(a.date) - +new Date(b.date));
+
+  const results = matches.filter((m) => m.status === "finished").sort((a, b) => +new Date(b.date) - +new Date(a.date));
+
+  return { upcoming, results };
 }
 
-/** Last change timestamp — useful for caching. */
-export function getLastChangeDate(league: LeagueShortcut, season: number) {
-  return fetchJson<string>(`/getlastchangedate/${league}/${season}`);
+export async function fetchStandings(leagueId: LeagueId, season: string): Promise<StandingRow[]> {
+  const res = await fetch(`${BASE}/getbltable/${leagueId}/${season}`);
+  if (!res.ok) return [];
+  const data: OLTableRow[] = await res.json();
+  return data.map((row, i) => ({
+    position: i + 1,
+    teamId: String(row.TeamInfoId),
+    played: row.Matches,
+    wins: row.Won,
+    draws: row.Draw,
+    losses: row.Lost,
+    goalsFor: row.Goals,
+    goalsAgainst: row.OpponentGoals,
+    points: row.Points,
+  }));
 }
