@@ -131,7 +131,7 @@ function LigaPage() {
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
                 {upcoming.slice(0, 12).map((m: Match) => (
-                  <MatchCard key={m.id} match={m} />
+                  <MatchCard key={m.id} match={m} teams={teams} />
                 ))}
               </div>
             )}
@@ -143,7 +143,7 @@ function LigaPage() {
             <h2 className="mb-3 font-display text-xl font-bold text-foreground">Ergebnisse</h2>
             <div className="grid gap-3 md:grid-cols-2">
               {results.slice(0, 12).map((m: Match) => (
-                <ResultCard key={m.id} match={m} />
+                <ResultCard key={m.id} match={m} teams={teams} />
               ))}
             </div>
           </>
