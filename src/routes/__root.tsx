@@ -76,11 +76,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "BundesligaLive – Spielplan, Ergebnisse & Tabellen" },
       { name: "description", content: "Spielpläne, Ergebnisse und Tabellen der 1., 2. und 3. Bundesliga – mobil optimiert für alle Fußballfans." },
       { name: "author", content: "BundesligaLive" },
-      { property: "og:title", content: "BundesligaLive" },
-      { property: "og:description", content: "Alle Spiele, Ergebnisse und Tabellen der deutschen Profi-Ligen." },
+      { property: "og:title", content: "BundesligaLive – Spielplan, Ergebnisse & Tabellen" },
+      { property: "og:description", content: "Spielpläne, Ergebnisse und Tabellen der 1., 2. und 3. Bundesliga – mobil optimiert für alle Fußballfans." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "BundesligaLive – Spielplan, Ergebnisse & Tabellen" },
+      { name: "twitter:description", content: "Spielpläne, Ergebnisse und Tabellen der 1., 2. und 3. Bundesliga – mobil optimiert für alle Fußballfans." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7bd9fe2b-fbe2-4e15-ae60-0137e548bf40/id-preview-76d60a93--58cd9404-50ee-4e87-905b-6b25e68ffb61.lovable.app-1778414775961.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7bd9fe2b-fbe2-4e15-ae60-0137e548bf40/id-preview-76d60a93--58cd9404-50ee-4e87-905b-6b25e68ffb61.lovable.app-1778414775961.png" },
     ],
     links: [
       {
