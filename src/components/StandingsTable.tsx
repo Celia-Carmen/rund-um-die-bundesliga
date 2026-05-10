@@ -1,7 +1,6 @@
-import type { StandingRow } from "@/data/leagues";
-import { getTeam } from "@/data/leagues";
+import type { StandingRow, Team } from "@/data/leagues";
 
-export function StandingsTable({ rows }: { rows: StandingRow[] }) {
+export function StandingsTable({ rows, teams }: { rows: StandingRow[]; teams: Team[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-card">
       <table className="w-full text-sm">
@@ -20,17 +19,24 @@ export function StandingsTable({ rows }: { rows: StandingRow[] }) {
         </thead>
         <tbody>
           {rows.map((r) => {
-            const t = getTeam(r.teamId);
+            const t = teams.find((team) => team.id === r.teamId);
             const diff = r.goalsFor - r.goalsAgainst;
             return (
               <tr key={r.teamId} className="border-t border-border even:bg-secondary/40">
                 <td className="px-2 py-2 font-bold text-primary">{r.position}</td>
-                <td className="px-2 py-2 font-medium text-foreground whitespace-nowrap">{t?.shortName}</td>
+                <td className="px-2 py-2 font-medium text-foreground whitespace-nowrap">
+                  {t?.shortName ?? t?.name ?? "–"}
+                </td>
                 <td className="px-2 py-2 text-center tabular-nums">{r.played}</td>
                 <td className="px-2 py-2 text-center tabular-nums">{r.wins}</td>
                 <td className="px-2 py-2 text-center tabular-nums">{r.draws}</td>
                 <td className="px-2 py-2 text-center tabular-nums">{r.losses}</td>
-                <td className="px-2 py-2 text-center tabular-nums whitespace-nowrap">{r.goalsFor}:{r.goalsAgainst}</td>
+                <td
+                  className="px-2 py-2 text-center tabular-nums
+  whitespace-nowrap"
+                >
+                  {r.goalsFor}:{r.goalsAgainst}
+                </td>
                 <td className="px-2 py-2 text-center tabular-nums">{diff > 0 ? `+${diff}` : diff}</td>
                 <td className="px-2 py-2 text-center font-extrabold text-primary tabular-nums">{r.points}</td>
               </tr>
