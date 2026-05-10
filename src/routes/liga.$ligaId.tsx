@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, ListChecks, BarChart3, History, Users } from "lucide-react";
-import { getLeague, LEAGUES, type LeagueId, type StandingRow } from "@/data/leagues";
-import { fetchTeams, fetchMatches, fetchStandings, CURRENT_SEASON, OL_SEASONS, seasonLabel } from "@/data/openligadb";
+import { getLeague, LEAGUES, type LeagueId, type Match, type StandingRow } from "@/data/leagues";
+import { fetchTeams, fetchMatches, fetchStandings, CURRENT_SEASON, seasonLabel } from "@/data/openligadb";
 import { MatchCard, ResultCard } from "@/components/MatchCard";
 import { StandingsTable } from "@/components/StandingsTable";
 import { SeasonSelect } from "@/components/SeasonSelect";
@@ -29,12 +29,17 @@ export const Route = createFileRoute("/liga/$ligaId")({
   },
   loader: async ({ params }) => {
     const leagueId = params.ligaId as LeagueId;
-    const [teams, { upcoming, results }, standings] = await Promise.all([
+    const [teams, matches, standings] = await Promise.all([
       fetchTeams(leagueId, CURRENT_SEASON),
       fetchMatches(leagueId, CURRENT_SEASON),
       fetchStandings(leagueId, CURRENT_SEASON),
     ]);
-    return { teams, upcoming, results, standings };
+    return {
+      teams,
+      upcoming: matches.upcoming,
+      results: matches.results,
+      standings,
+    };
   },
   component: LigaPage,
   notFoundComponent: () => (
@@ -57,11 +62,9 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: "teams", label: "Teams", icon: Users },
 ];
 
-const SEASON_OPTIONS = OL_SEASONS.map((s) => ({ value: s, label: seasonLabel(s) }));
-
 function LigaPage() {
   const { ligaId } = Route.useParams();
-  const { teams, upcoming, results, standings } = Route.useLoaderData();
+  const { upcoming, results, standings } = Route.useLoaderData();
   const league = getLeague(ligaId)!;
 
   const [tab, setTab] = useState<Tab>("spiele");
@@ -127,8 +130,8 @@ function LigaPage() {
               <p className="text-muted-foreground">Keine kommenden Spiele gefunden.</p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
-                {upcoming.slice(0, 12).map((m) => (
-                  <MatchCard key={m.id} match={m} teams={teams} />
+                {upcoming.slice(0, 12).map((m: Match) => (
+                  <MatchCard key={m.id} match={m} />
                 ))}
               </div>
             )}
@@ -139,8 +142,8 @@ function LigaPage() {
           <>
             <h2 className="mb-3 font-display text-xl font-bold text-foreground">Ergebnisse</h2>
             <div className="grid gap-3 md:grid-cols-2">
-              {results.slice(0, 12).map((m) => (
-                <ResultCard key={m.id} match={m} teams={teams} />
+              {results.slice(0, 12).map((m: Match) => (
+                <ResultCard key={m.id} match={m} />
               ))}
             </div>
           </>
@@ -151,7 +154,7 @@ function LigaPage() {
             <h2 className="mb-3 font-display text-xl font-bold text-foreground">
               Aktuelle Tabelle ·{seasonLabel(CURRENT_SEASON)}
             </h2>
-            <StandingsTable rows={standings} teams={teams} />
+            <StandingsTable rows={standings} />
           </>
         )}
 
@@ -159,12 +162,12 @@ function LigaPage() {
           <>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display text-xl font-bold text-foreground">Tabellenhistorie</h2>
-              <SeasonSelect value={historySeason} onChange={setHistorySeason} seasons={SEASON_OPTIONS} />
+              <SeasonSelect value={historySeason} onChange={setHistorySeason} />
             </div>
             {historyLoading ? (
               <p className="text-muted-foreground">Lade Daten…</p>
             ) : (
-              <StandingsTable rows={historyStandings} teams={teams} />
+              <StandingsTable rows={historyStandings} />
             )}
           </>
         )}
@@ -172,7 +175,7 @@ function LigaPage() {
         {tab === "teams" && (
           <>
             <h2 className="mb-3 font-display text-xl font-bold text-foreground">Mannschaft & Spielplan</h2>
-            <TeamPicker teams={teams} upcoming={upcoming} />
+            <TeamPicker leagueId={ligaId} />
           </>
         )}
       </section>
