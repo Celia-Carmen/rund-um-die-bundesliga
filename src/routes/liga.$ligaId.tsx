@@ -64,7 +64,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
 
 function LigaPage() {
   const { ligaId } = Route.useParams();
-  const { upcoming, results, standings } = Route.useLoaderData();
+  const { teams, upcoming, results, standings } = Route.useLoaderData();
   const league = getLeague(ligaId)!;
 
   const [tab, setTab] = useState<Tab>("spiele");
@@ -154,7 +154,7 @@ function LigaPage() {
             <h2 className="mb-3 font-display text-xl font-bold text-foreground">
               Aktuelle Tabelle ·{seasonLabel(CURRENT_SEASON)}
             </h2>
-            <StandingsTable rows={standings} />
+            <StandingsTable rows={standings} teams={teams} />
           </>
         )}
 
@@ -167,7 +167,7 @@ function LigaPage() {
             {historyLoading ? (
               <p className="text-muted-foreground">Lade Daten…</p>
             ) : (
-              <StandingsTable rows={historyStandings} />
+              <StandingsTable rows={historyStandings} teams={teams} />
             )}
           </>
         )}
