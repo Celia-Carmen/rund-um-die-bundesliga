@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, ListChecks, BarChart3, History, Users } from "lucide-react";
 import { getLeague, LEAGUES, type LeagueId, type Match, type StandingRow } from "@/data/leagues";
-import { fetchTeams, fetchMatches, fetchStandings, CURRENT_SEASON, seasonLabel } from "@/data/openligadb";
+import { fetchTeams, fetchMatches, fetchStandings, CURRENT_SEASON, OL_SEASONS, seasonLabel } from "@/data/openligadb";
+
+const SEASON_OPTIONS = OL_SEASONS.map((s) => ({ value: s, label: seasonLabel(s) }));
 import { MatchCard, ResultCard } from "@/components/MatchCard";
 import { StandingsTable } from "@/components/StandingsTable";
 import { SeasonSelect } from "@/components/SeasonSelect";
@@ -162,7 +164,7 @@ function LigaPage() {
           <>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display text-xl font-bold text-foreground">Tabellenhistorie</h2>
-              <SeasonSelect value={historySeason} onChange={setHistorySeason} />
+              <SeasonSelect value={historySeason} onChange={setHistorySeason} seasons={SEASON_OPTIONS} />
             </div>
             {historyLoading ? (
               <p className="text-muted-foreground">Lade Daten…</p>
