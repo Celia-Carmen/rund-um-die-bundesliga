@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, ListChecks, BarChart3, History, Users } from "lucide-react";
-import { getLeague, LEAGUES, type LeagueId, type Match, type StandingRow } from "@/data/leagues";
+import { getLeague, LEAGUES, type LeagueId, type StandingRow } from "@/data/leagues";
 import { fetchTeams, fetchMatches, fetchStandings, CURRENT_SEASON, OL_SEASONS, seasonLabel } from "@/data/openligadb";
-
-const SEASON_OPTIONS = OL_SEASONS.map((s) => ({ value: s, label: seasonLabel(s) }));
 import { MatchCard, ResultCard } from "@/components/MatchCard";
 import { StandingsTable } from "@/components/StandingsTable";
 import { SeasonSelect } from "@/components/SeasonSelect";
@@ -31,17 +29,12 @@ export const Route = createFileRoute("/liga/$ligaId")({
   },
   loader: async ({ params }) => {
     const leagueId = params.ligaId as LeagueId;
-    const [teams, matches, standings] = await Promise.all([
+    const [teams, { upcoming, results }, standings] = await Promise.all([
       fetchTeams(leagueId, CURRENT_SEASON),
       fetchMatches(leagueId, CURRENT_SEASON),
       fetchStandings(leagueId, CURRENT_SEASON),
     ]);
-    return {
-      teams,
-      upcoming: matches.upcoming,
-      results: matches.results,
-      standings,
-    };
+    return { teams, upcoming, results, standings };
   },
   component: LigaPage,
   notFoundComponent: () => (
@@ -63,6 +56,8 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: "historie", label: "Historie", icon: History },
   { id: "teams", label: "Teams", icon: Users },
 ];
+
+const SEASON_OPTIONS = OL_SEASONS.map((s) => ({ value: s, label: seasonLabel(s) }));
 
 function LigaPage() {
   const { ligaId } = Route.useParams();
@@ -132,7 +127,7 @@ function LigaPage() {
               <p className="text-muted-foreground">Keine kommenden Spiele gefunden.</p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2">
-                {upcoming.slice(0, 12).map((m: Match) => (
+                {upcoming.slice(0, 12).map((m) => (
                   <MatchCard key={m.id} match={m} teams={teams} />
                 ))}
               </div>
@@ -144,7 +139,7 @@ function LigaPage() {
           <>
             <h2 className="mb-3 font-display text-xl font-bold text-foreground">Ergebnisse</h2>
             <div className="grid gap-3 md:grid-cols-2">
-              {results.slice(0, 12).map((m: Match) => (
+              {results.slice(0, 12).map((m) => (
                 <ResultCard key={m.id} match={m} teams={teams} />
               ))}
             </div>
